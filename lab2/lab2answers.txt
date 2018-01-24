@@ -1,0 +1,31 @@
+2-1:
+
+We notice that the bunny is chopped in slices.
+This makes us believe that cylindrical geometry was used to map.
+
+A strange texture using modulo and other math functions.
+
+2-2:
+No?
+
+Memory is the limited resource. You don't want to reupload the texture every time, therefor you make a reference to it in the .C file.
+Also, you can't have strings defined in the shaders.
+
+2-3:
+We put the projectionMatrix to the left and the mdlMatrix right in the gl_position calculations.
+This is because we want to rotate and translate the model before doing the projecting.
+The mdlMatrix consists of R before T, because we wanted to rotate the model before we used the translate matrix (moving it).
+
+2-4:
+We can't place the camera at position v. We can't even look at position v.
+
+2-5:
+We used Gourand shading, since we do the light calculations in vert.
+
+We don't need vec4 for light normals etc because we only care about direction, not the position, for these vectors.
+
+2-6:
+We couldn't see a massive differense, but in some parts of the bunny it was clear.
+You can tell that Phong is more "direct" while Gourand is more "spread out".
+
+2-7:
