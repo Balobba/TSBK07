@@ -1,0 +1,20 @@
+3-1:
+Only rotate one blade and draw the other ones as rotated(by pi/2, pi and -pi/2) copies.
+
+??????
+
+This could be accomplished by manual editing the position with the arrow keys.
+
+3-2:
+Keyboard implement, to move the camera around the windmill.
+
+We can technically have the camera stationary and just move the entire world instead.
+
+3-3:
+We used the same camera matrix for the skybox, but we zeroed out the translations.
+
+We handled each object as a unique object with unique matrices. It's not good to do this if there are many objects in the scene.
+
+We rotate the skybox together with the world, as the camera is stationary. What we don't do is to move the skybox in any direction while the world moves.
+
+It doesn't have a floor! We got pissed off when we saw it in blender. :))))) 
