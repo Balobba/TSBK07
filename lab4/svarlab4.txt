@@ -1,0 +1,7 @@
+4-1:
+The heightmap contains 256 different types of height. (According to GIMP, the input range is from 0-255)
+
+It contains one polygon.
+
+4-2:
+Yes we rebuilt the whole camera movement function.
