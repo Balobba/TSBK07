@@ -6,7 +6,8 @@ in vec3 normal_to_fragment;
 in vec3 pos_to_fragment;
 out vec4 out_Color;
 
-uniform sampler2D texUnit;
+uniform sampler2D texMask;
+uniform sampler2D texRut;
 
 //Specular
 uniform vec3 lightSourcesDirPosArr[4];
@@ -17,6 +18,8 @@ uniform bool isDirectional[4];
 uniform mat4 mdlMatrix;
 
 uniform mat4 lookieMat;
+
+uniform bool hasTex;
 
 void main(void)
 {
@@ -51,5 +54,16 @@ void main(void)
 		tmpOutColor += vec3(0.5*shade+0.7*specularStrength)*lightSourcesColorArr[i];
 	}
 	//out_Color = vec4(vec3(0.5*shade+0.7*specularStrength)*lightSourcesColorArr[0],1.0f);
-	out_Color = vec4(tmpOutColor,1.0f);
+
+		if(hasTex){
+			vec4 tex,tex2;
+			if(tex_to_fragment.s > tex_to_fragment.t){
+				tex = texture(texRut, tex_to_fragment);
+			}else{
+				tex = texture(texMask, tex_to_fragment);
+			}
+			out_Color = 2*tex*vec4(tmpOutColor,1.0f);
+		}else{
+				out_Color = vec4(tmpOutColor,1.0f);
+		}
 }

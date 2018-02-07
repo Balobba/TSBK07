@@ -24,4 +24,6 @@ void main(void)
 	mat3 normalMatrix1 = mat3(lookieMat*mdlMatrix);
 	vec3 transformedNormal = normalMatrix1*in_Normal;
 	normal_to_fragment = transformedNormal;
+
+	tex_to_fragment = inTexCoord;
 }

@@ -17,4 +17,16 @@ We handled each object as a unique object with unique matrices. It's not good to
 
 We rotate the skybox together with the world, as the camera is stationary. What we don't do is to move the skybox in any direction while the world moves.
 
-It doesn't have a floor! We got pissed off when we saw it in blender. :))))) 
+It doesn't have a floor!
+
+3-4:
+We do camera position - surface coordinate, but since we work in view coordinates, the camera is always 0,0,0.
+So the surface-eye coordinate simply is (-surface coordinate)
+
+The normal vector is the only one we re-normalize, the rest is only normalized in the frag shader.
+We also normalize the lights coordinates and the surface position in the frag shader.
+
+3-5:
+We multiply them in before applying it to out_Color.
+
+We took the texture coordinates of the bunny and divided it into two textures (x>y).
