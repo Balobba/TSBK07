@@ -98,18 +98,92 @@ Model* GenerateTerrain(TextureData *tex)
 	return model;
 }
 
+float calculateHeight(Model *m, TextureData *tex, float x, float z){
+	//get the quad coordinates
+	//int xFloored = floor(x+0.5);
+	//int zFloored = floor(z+0.5);
+	int xFloored = floor(x);
+	int zFloored = floor(z);
+
+	//float terrainY = m->vertexArray[((int)x+xFloored + (int)z+xFloored * tex->width)*3 + 1];
+	//return terrainY;
+
+	//vectors for plane equation
+	vec3 v,u,n;
+
+	vec3 vertexVec1;
+
+	//unique vertex for the 2 triangles
+	if((x-xFloored)+(z-zFloored) < 1){
+		//in the right triangle
+		float x00 = m->vertexArray[(xFloored + zFloored * tex->width)*3 + 0];
+		float y00 = m->vertexArray[(xFloored + zFloored * tex->width)*3 + 1];
+		float z00 = m->vertexArray[(xFloored + zFloored * tex->width)*3 + 2];
+
+	 	vec3 tmpvertexVec1 = {x00,y00,z00};
+		vertexVec1 = tmpvertexVec1;
+
+	}else{
+		float x11 = m->vertexArray[((xFloored+1) + (zFloored+1) * tex->width)*3 + 0];
+		float y11 = m->vertexArray[((xFloored+1) + (zFloored+1) * tex->width)*3 + 1];
+		float z11 = m->vertexArray[((xFloored+1) + (zFloored+1) * tex->width)*3 + 2];
+
+		vec3 tmpvertexVec1 = {x11,y11,z11};
+		vertexVec1 = tmpvertexVec1;
+	}
+
+
+	//shared vertices
+	float x01 = m->vertexArray[(xFloored + (zFloored+1) * tex->width)*3 + 0];
+	float y01 = m->vertexArray[(xFloored + (zFloored+1) * tex->width)*3 + 1];
+	float z01 = m->vertexArray[(xFloored + (zFloored+1) * tex->width)*3 + 2];
+
+	vec3 vertexVec2 = {x01,y01,z01};
+
+	float x10 = m->vertexArray[((xFloored+1) + zFloored * tex->width)*3 + 0];
+	float y10 = m->vertexArray[((xFloored+1) + zFloored * tex->width)*3 + 1];
+	float z10 = m->vertexArray[((xFloored+1) + zFloored * tex->width)*3 + 2];
+
+	vec3 vertexVec3 = {x10,y10,z10};
+
+	u = VectorSub(vertexVec3,vertexVec2);
+	v = VectorSub(vertexVec3,vertexVec1);
+
+	n = CrossProduct(u,v);
+
+
+	// Ax+By+Cz = -D
+	float D = (n.x*vertexVec3.x + n.y*vertexVec3.y + n.z*vertexVec3.z);
+
+	// y = (-D -Ax -Cz) / B
+	float ySolved = (D - n.x*x - n.z*z) / n.y;
+	return ySolved;
+	//return (vertexVec1.y+vertexVec2.y+vertexVec3.y)/3;
+
+	//float terrainX = vertexArray[(x+xFloored + z+xFloored * tex->width)*3 + 0];
+	//float terrainY = vertexArray[(x+xFloored + z+xFloored * tex->width)*3 + 1];
+	//float terrainZ = vertexArray[(x+xFloored + z+xFloored * tex->width)*3 + 2];
+
+
+}
 
 // vertex array object
 Model *m, *m2, *tm;
+
+Model *ball;
+Model *ball2;
 // Reference to shader program
-GLuint program;
+GLuint program,ballShader;
 GLuint tex1, tex2;
 TextureData ttex; // terrain
+GLuint textureConcrecte,textureSand;
 
 GLfloat angleY;
 GLfloat angleX ;
 
 mat4 camTrans;
+mat4 ballTrans;
+
 
 void init(void)
 {
@@ -120,15 +194,35 @@ void init(void)
 	printError("GL inits");
 
 	projectionMatrix = frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 50.0);
+	angleY= 0.0f;
+	angleX = 0.0f;
+	camTrans = T(0,0,0);
 
 	// Load and compile shader
 	program = loadShaders("terrain.vert", "terrain.frag");
+	ballShader = loadShaders("ball.vert", "ball.frag");
 	glUseProgram(program);
 	printError("init shader");
 
+
+
 	glUniformMatrix4fv(glGetUniformLocation(program, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
-	glUniform1i(glGetUniformLocation(program, "tex"), 0); // Texture unit 0
 	LoadTGATextureSimple("maskros512.tga", &tex1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, tex1);		// Bind Our Texture tex1
+	glUniform1i(glGetUniformLocation(program, "tex"), 0); // Texture unit 0
+
+	LoadTGATextureSimple("sand.tga", &textureSand);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, textureSand);		// Bind Our Texture textureConcrecte
+	glUniform1i(glGetUniformLocation(program, "textureSand"), 1); // Texture unit 1
+
+	LoadTGATextureSimple("conc.tga", &textureConcrecte);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, textureConcrecte);		// Bind Our Texture textureConcrecte
+	glUniform1i(glGetUniformLocation(program, "textureConcrecte"), 2); // Texture unit 2 textureSand
+
+
 
 // Load terrain data
 
@@ -136,9 +230,12 @@ void init(void)
 	tm = GenerateTerrain(&ttex);
 	printError("init terrain");
 
-	angleY= 0.0f;
-	angleX = 0.0f;
-	camTrans = T(0,0,0);
+	glUseProgram(ballShader);
+	glUniformMatrix4fv(glGetUniformLocation(ballShader, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
+	ball = LoadModelPlus("octagon.obj");
+	ballTrans = T(0,0,0);
+
+
 }
 
 void display(void)
@@ -154,8 +251,8 @@ void display(void)
 
 	// Build matrix
 
-	vec3 cam = {10, 10, 10};
-	vec3 lookAtPoint = {2, 0, 2};
+	vec3 cam = {0, 10, 0};
+	vec3 lookAtPoint = {1, 0, 0};
 	camMatrix = lookAt(cam.x, cam.y, cam.z,
 				lookAtPoint.x, lookAtPoint.y, lookAtPoint.z,
 				0.0, 1.0, 0.0);
@@ -166,8 +263,20 @@ void display(void)
 	total = Mult(camMatrix, modelView);
 	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
 	glUniformMatrix4fv(glGetUniformLocation(program, "camMatrix"), 1, GL_TRUE, camMatrix.m);
-	glBindTexture(GL_TEXTURE_2D, tex1);		// Bind Our Texture tex1
 	DrawModel(tm, program, "inPosition", "inNormal", "inTexCoord");
+
+
+	glUseProgram(ballShader);
+	float ballTransX = ballTrans.m[3];
+	float ballTransZ = ballTrans.m[11];
+	float ballTransY = calculateHeight(tm,&ttex,ballTransX,ballTransZ);
+	ballTrans = Mult(T(0.01,0,0.01),ballTrans);
+	ballTrans.m[7] = ballTransY;
+	mat4 ballMat = Mult(camMatrix,ballTrans);
+	glUniformMatrix4fv(glGetUniformLocation(ballShader, "mdlMatrix"), 1, GL_TRUE, ballMat.m);
+	glUniformMatrix4fv(glGetUniformLocation(ballShader, "camMatrix"), 1, GL_TRUE, camMatrix.m);
+	DrawModel(ball,ballShader,"inPosition","inNormal",NULL);
+
 
 	printError("display 2");
 

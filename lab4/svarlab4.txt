@@ -5,3 +5,20 @@ It contains one polygon.
 
 4-2:
 Yes we rebuilt the whole camera movement function.
+
+4-3:
+The fast one, 3 neighbors v1,v2,v3. The normal is cross product of v1-v2 and v1-v3.
+
+4-4:
+We check the x and z for the object to find the quad.
+To find the triangle we check if x+z is above or below one.
+
+We calculate the height by using the plane equation with the three corners of
+the triangle as three points in the plane. We then use them to calculate a
+normal which gives us an equation which we solve for our height(y-coordinate).
+
+4-5:
+A multi-texture) We check if the y coordinates are above a certain value, then we use another
+texture. This is done in the fragment shader.
+
+D water) we check for y coordinates below a threshold.
